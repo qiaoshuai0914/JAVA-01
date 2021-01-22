@@ -1,0 +1,43 @@
+gc总结：
+
+1.Java内存：
+java堆：java堆内存是运行时内存的一部分，是线程共享的内存，主要用来存放对象实例和数组，java1.8中字符串常量池也放堆中，堆分为年轻代和老年代；年轻代分为eden区和存活区from和to，默认比例是8:1:1；老年代是存放活的比较久的对象；通过-Xmx和-Xms设置堆的初大小和最大大小；
+如果没有分配内存会OOM ，是垃圾回收器主要回收的区域；
+
+2.垃圾回收器
+Serial收集器：串行收集器，Serial是新生代的单线程收集器，收集过程中会Stop The World ，算法采用的是复制算法；把eden和其中一个存活区中的存活的对象放到另一个存活区；-XX:+UserSerialGC 来选择Serial作为新生代收集器
+ParNew收集器；并行收集器，是Serial的多线程版本， 与CMS收集器搭配使用，-XX:+UseParNewGC 来指定使用 ParNew 作为新生代收集器。
+Paraller Scavenge 收集器：是并行收集器，采用的是复制算法进行回收垃圾，新生代垃圾回收器，是以吞吐量为目标的垃圾收集器
+Paraller Old 收集器：是并行收集器，采用标记整理的方法进行垃圾回收，老年代垃圾回收器，
+Serial Old 收集器：老奶代的Serial版本，标记整理算法；
+CMS垃圾收集器：标记清楚算法，以最短回收停顿时间为目标的收集器，
+ 阶段分为：
+ 阶段 1:Initial Mark(初始标记)
+ 阶段 2:Concurrent Mark(并发标记)
+ 阶段 3:Concurrent Preclean(并发预清理) 
+阶段 4: Final Remark(最终标记)
+ 阶段 5: Concurrent Sweep(并发清除) 
+阶段 6: Concurrent Reset(并发重置)      
+G1收集器：jdk9的默认来及收集器，把整个堆划分为大小相等的独立区域，保留了新生代和老年代的概念，每个相等的区域可能为新生代或者老年代，
+Evacuation Pause: young(纯年轻代模式转移暂停) Concurrent Marking(并发标记)
+ 阶段 1: Initial Mark(初始标记)
+ 阶段 2: Root Region Scan(Root区扫描) 
+  阶段 3: Concurrent Mark(并发标记)
+ 阶段 4: Remark(再次标记)
+ 阶段 5: Cleanup(清理)
+ Evacuation Pause (mixed)(转移暂停: 混合模式) Full GC (Allocation Failure)      
+
+3.命令参数：
++UseSerialGC  年轻代：Serial  老年代：Serial Old
++UseParNewGC  年轻代：ParNew 老年代：Serial Old
++UseParallelGC 年轻代：Parallel Scavenge  老年代：Parallel Old
++UseParallelGC -UseParalleOldGC 年代代是 Parallel Scavenge 老年代是 Serial Old
++UseConcMarkSweepGC  年轻代：ParNew  老年代：cms
++UseConcMarkSweepGC -UseParNewGC  年轻代是 Serial  老年代 cms
++UseG1GC 全部g1；
+
+4.垃圾回收器选择；
+根据堆的大小和垃圾回收器的特点，以及业务能接受的情况，选择合适的垃圾回收组合，如果堆比较大可能每次垃圾回收时间比较久，如果堆比较小那么可能垃圾回收次数比较多，在业务能接受的范围内，采取最有的垃圾回收器组合。
+
+1。一般情况下，为了防止堆的扩容，一般堆的初始大小和最大大小一样大；
+2。MetaSpace元数据空，一般不设置大小。
