@@ -11,6 +11,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
+import java.nio01.router.RandomHttpEndpointRouter;
+import java.util.ArrayList;
+
 public class NettyHttpServer {
     public static void main(String[] args) throws InterruptedException {
 
@@ -33,7 +36,10 @@ public class NettyHttpServer {
 
             b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new HttpInitializer());
+                    .childHandler(new HttpInitializer(
+                            new RandomHttpEndpointRouter(),
+                            new ArrayList<String>()
+                    ));
 
             Channel ch = b.bind(port).sync().channel();
             System.out.println("开启netty http服务器，监听地址和端口为 http://127.0.0.1:" + port + '/');
